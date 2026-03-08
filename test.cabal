@@ -5,7 +5,18 @@ version:       0.1.0.0
 library
   exposed-modules:
       Task1
-    , Task2
+    , Task2.Tree
+    , Task2.Seq
+    , Task2.PQueue
+    , Task3.Tree
+    , Task3.Seq
+    , Task3.PQueue
+    , Task4.Tree
+    , Task4.Seq
+    , Task4.PQueue
+    , Common.MonoidalTree
+    , Common.Sequence
+    , Common.PriorityQueue
   hs-source-dirs: src
   ghc-options: -Werror -Wall
   build-depends: base >=4.7 && <5
@@ -18,6 +29,9 @@ test-suite test
   other-modules:
       Task1Suite
     , Task2Suite
+    , Task3Suite
+    , Task4Suite
+    , CommonSuite
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wno-missing-export-lists -Wno-missing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
