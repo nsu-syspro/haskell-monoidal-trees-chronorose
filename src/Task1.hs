@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -Wall #-}
+
 -- The above pragma enables all warnings
 
 module Task1 where
@@ -6,16 +7,16 @@ module Task1 where
 -- * Measure
 
 -- | Class describing values 'a' that can be measured as monoid 'm'
-class Monoid m => Measured m a where
+class (Monoid m) => Measured m a where
   -- | Returns corresponding measure 'm' for given value 'a'
   measure :: a -> m
 
 -- Note: Intentionally marked as INCOHERENT to avoid clashes with more precise instances later
-instance {-# INCOHERENT #-} Monoid m => Measured m m where
+instance {-# INCOHERENT #-} (Monoid m) => Measured m m where
   measure = id
 
 -- Note: Intentionally marked as INCOHERENT to avoid clashes with more precise instances later
-instance {-# INCOHERENT #-} Measured m a => Measured m [a] where
+instance {-# INCOHERENT #-} (Measured m a) => Measured m [a] where
   measure = foldMap measure
 
 -- | Min
@@ -31,18 +32,19 @@ instance {-# INCOHERENT #-} Measured m a => Measured m [a] where
 -- Min True
 -- >>> measure ([] :: [Int]) :: Min Int
 -- PosInf
---
 data Min a = PosInf | Min a
   deriving (Show, Eq)
 
-instance Ord a => Semigroup (Min a) where
-  (<>) = error "TODO: define (<>) (Semigroup (Min a))"
+instance (Ord a) => Semigroup (Min a) where
+  Min a <> Min b = (Min . min a) b
+  a <> PosInf = a
+  PosInf <> b = b
 
-instance Ord a => Monoid (Min a) where
-  mempty = error "TODO: define mempty (Monoid (Min a))"
+instance (Ord a) => Monoid (Min a) where
+  mempty = PosInf
 
-instance Ord a => Measured (Min a) a where
-  measure = error "TODO: define measure (Measured (Min a) a)"
+instance (Ord a) => Measured (Min a) a where
+  measure = Min
 
 -- | Max
 --
@@ -57,18 +59,19 @@ instance Ord a => Measured (Min a) a where
 -- Max True
 -- >>> measure ([] :: [Int]) :: Max Int
 -- NegInf
---
 data Max a = NegInf | Max a
   deriving (Show, Eq)
 
-instance Ord a => Semigroup (Max a) where
-  (<>) = error "TODO: define (<>) (Semigroup (Max a))"
+instance (Ord a) => Semigroup (Max a) where
+  Max a <> Max b = (Max . max a) b
+  NegInf <> b = b
+  a <> NegInf = a
 
-instance Ord a => Monoid (Max a) where
-  mempty = error "TODO: define mempty (Monoid (Max a))"
+instance (Ord a) => Monoid (Max a) where
+  mempty = NegInf
 
-instance Ord a => Measured (Max a) a where
-  measure = error "TODO: define measure (Measured (Max a) a)"
+instance (Ord a) => Measured (Max a) a where
+  measure = Max
 
 -- | MinMax
 --
@@ -83,18 +86,17 @@ instance Ord a => Measured (Max a) a where
 -- MinMax {getMinMax = (Min True,Max True)}
 -- >>> measure ([] :: [Int]) :: MinMax Int
 -- MinMax {getMinMax = (PosInf,NegInf)}
---
-newtype MinMax a = MinMax { getMinMax :: (Min a, Max a) }
+newtype MinMax a = MinMax {getMinMax :: (Min a, Max a)}
   deriving (Show, Eq)
 
-instance Ord a => Semigroup (MinMax a) where
-  (<>) = error "TODO: define (<>) (Semigroup (MinMax a))"
+instance (Ord a) => Semigroup (MinMax a) where
+  a <> b = MinMax (getMinMax a <> getMinMax b)
 
-instance Ord a => Monoid (MinMax a) where
-  mempty = error "TODO: define mempty (Monoid (MinMax a))"
+instance (Ord a) => Monoid (MinMax a) where
+  mempty = MinMax (PosInf, NegInf)
 
-instance Ord a => Measured (MinMax a) a where
-  measure = error "TODO: define measure (Measured (MinMax a) a)"
+instance (Ord a) => Measured (MinMax a) a where
+  measure x = MinMax (Min x, Max x)
 
 -- | Size
 --
@@ -109,15 +111,14 @@ instance Ord a => Measured (MinMax a) a where
 -- Size {getSize = 1}
 -- >>> measure ([] :: [Int]) :: Size Int
 -- Size {getSize = 0}
---
-newtype Size a = Size { getSize :: Int }
+newtype Size a = Size {getSize :: Int}
   deriving (Show, Eq)
 
 instance Semigroup (Size a) where
-  (<>) = error "TODO: define (<>) (Semigroup (Size a))"
+  a <> b = Size (getSize a + getSize b)
 
 instance Monoid (Size a) where
-  mempty = error "TODO: define mempty (Monoid (Size a))"
+  mempty = Size 0
 
 instance Measured (Size a) a where
-  measure = error "TODO: define measure (Measured (Size a) a)"
+  measure _ = Size 1
